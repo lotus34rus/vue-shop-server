@@ -98,7 +98,7 @@ app.get('/user/:token', (req,res)=>{
     if (err) {
       res.sendStatus(500)
     } else {
-      res.send({ user: user })
+      res.send({ user: user[0] })
     }
   })
 })
