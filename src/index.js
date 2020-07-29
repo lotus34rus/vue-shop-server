@@ -5,6 +5,8 @@ const morgan = require('morgan')
 const mongoose = require('mongoose')
 
 const { uuid } = require('uuidv4');
+const md5 = require('md5');
+
 
 const app = express()
 
@@ -15,9 +17,12 @@ app.use(bodyParser.json())
 app.use(cors())
 
 const Products = require("./models/product-model")
+const User = require("./models/user-model")
+
 
 mongoose.Promise = global.Promise
 mongoose.connect(config.dbURL, config.dbOptions)
+mongoose.set('useCreateIndex', true);
 
 mongoose.connection
   .once('open', () => {
@@ -62,13 +67,38 @@ app.post('/products', (req, res) => {
 
 
 
-app.post("/auth", (req, res) => {
-  // console.log(req.body)
+app.post("/registration", (req, res) => {
 
   const token = uuid();
-  res.send({
-    success: true,
+
+  const newUser = new User({
+    id: Date.now(),
+    username: req.body.username,
+    password: md5(req.body.password),
     token: token
   })
 
+  newUser.save((err, data) => {
+    if (err) {
+      console.log(err)
+    } else {
+      res.send({
+        success: true,
+        token: token
+      })
+    }
+  })
+
+})
+
+
+app.get('/user/:token', (req,res)=>{
+  console.log(req.params);
+  User.find({token: req.params.token}, (err, user) => {
+    if (err) {
+      res.sendStatus(500)
+    } else {
+      res.send({ user: user })
+    }
+  })
 })
